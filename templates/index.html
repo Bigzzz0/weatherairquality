@@ -13,22 +13,9 @@
             font-family: 'Poppins', sans-serif;
             transition: background 0.5s ease-in-out;
         }
-
-        /* Custom prose styles for AI analysis */
-        .prose br {
-            margin-bottom: 0.5rem; /* Add space between br tags */
-            content: "";
-            display: block;
-        }
-
-        .prose ul {
-            list-style-type: disc;
-            padding-left: 1.25em; /* Default padding for lists */
-        }
-
-        .prose li {
-            margin-bottom: 0.5em;
-        }
+        .prose br { margin-bottom: 0.5rem; content: ""; display: block; }
+        .prose ul { list-style-type: disc; padding-left: 1.25em; }
+        .prose li { margin-bottom: 0.5em; }
     </style>
 </head>
 <body id="app-body" class="bg-gradient-to-br from-gray-700 to-gray-900 min-h-screen p-5 flex justify-center items-start">
@@ -80,82 +67,40 @@
         const forecastDataEl = document.getElementById('forecastData');
         const favoritesList = document.getElementById('favoritesList');
         let currentCity = null;
-        let currentCoords = { lat: null, lon: null };
         let currentWeatherData = null;
         let currentAirQualityData = null;
-        let currentBgClasses = ['from-gray-700', 'to-gray-900']; // Default background
+        let currentBgClasses = ['from-gray-700', 'to-gray-900'];
 
-        // --- DYNAMIC UI CONFIG ---
         const weatherBackgrounds = {
-            '01d': ['from-sky-400', 'to-blue-600'],        // Clear Sky Day
-            '02d': ['from-sky-500', 'to-blue-700'],        // Few Clouds Day
-            '03d': ['from-gray-500', 'to-gray-700'],       // Scattered Clouds Day
-            '04d': ['from-gray-600', 'to-slate-800'],      // Broken/Overcast Clouds Day
-            '09d': ['from-slate-500', 'to-slate-700'],     // Shower Rain Day
-            '10d': ['from-blue-800', 'to-gray-900'],       // Rain Day
-            '11d': ['from-indigo-800', 'to-gray-900'],     // Thunderstorm Day
-            '13d': ['from-slate-300', 'to-cyan-500'],      // Snow Day
-            '50d': ['from-gray-400', 'to-gray-600'],       // Mist Day
-            '01n': ['from-indigo-900', 'to-black'],        // Clear Sky Night
-            '02n': ['from-indigo-800', 'to-gray-900'],     // Few Clouds Night
-            '03n': ['from-gray-700', 'to-gray-900'],       // Scattered Clouds Night
-            '04n': ['from-gray-800', 'to-black'],          // Broken/Overcast Clouds Night
-            '09n': ['from-slate-700', 'to-slate-900'],     // Shower Rain Night
-            '10n': ['from-indigo-900', 'to-black'],        // Rain Night
-            '11n': ['from-gray-900', 'to-black'],          // Thunderstorm Night
-            '13n': ['from-slate-500', 'to-indigo-800'],    // Snow Night
-            '50n': ['from-gray-700', 'to-gray-900'],       // Mist Night
+            '01d':['from-sky-400','to-blue-600'],'02d':['from-sky-500','to-blue-700'],'03d':['from-gray-500','to-gray-700'],'04d':['from-gray-600','to-slate-800'],'09d':['from-slate-500','to-slate-700'],'10d':['from-blue-800','to-gray-900'],'11d':['from-indigo-800','to-gray-900'],'13d':['from-slate-300','to-cyan-500'],'50d':['from-gray-400','to-gray-600'],'01n':['from-indigo-900','to-black'],'02n':['from-indigo-800','to-gray-900'],'03n':['from-gray-700','to-gray-900'],'04n':['from-gray-800','to-black'],'09n':['from-slate-700','to-slate-900'],'10n':['from-indigo-900','to-black'],'11n':['from-gray-900','to-black'],'13n':['from-slate-500','to-indigo-800'],'50n':['from-gray-700','to-gray-900'],
         };
-        const aqiWarningBackgrounds = {
-            4: ['from-orange-700', 'to-red-900'], // Poor
-            5: ['from-red-800', 'to-purple-900'], // Very Poor
-        };
-        const aqiColorClasses = {
-            1: 'bg-green-500/70', 2: 'bg-yellow-500/70', 3: 'bg-orange-500/70', 4: 'bg-red-500/70', 5: 'bg-purple-800/70',
-        };
+        const aqiWarningBackgrounds = { 4:['from-orange-700','to-red-900'],5:['from-red-800','to-purple-900'], };
+        const aqiColorClasses = { 1:'bg-green-500/70',2:'bg-yellow-500/70',3:'bg-orange-500/70',4:'bg-red-500/70',5:'bg-purple-800/70', };
 
         const updateDynamicUI = (weather, aqi) => {
             let newBgClasses = [];
-            // Priority 1: AQI warnings
-            if (aqiWarningBackgrounds[aqi.aqi]) {
-                newBgClasses = aqiWarningBackgrounds[aqi.aqi];
-            } 
-            // Priority 2: Weather conditions
-            else if (weatherBackgrounds[weather.icon]) {
-                newBgClasses = weatherBackgrounds[weather.icon];
-            }
-            // Fallback to default if no match
-            else {
-                newBgClasses = ['from-gray-700', 'to-gray-900'];
-            }
-
-            // Update body background
+            if (aqi && aqiWarningBackgrounds[aqi.aqi]) newBgClasses = aqiWarningBackgrounds[aqi.aqi];
+            else if (weather && weatherBackgrounds[weather.icon]) newBgClasses = weatherBackgrounds[weather.icon];
+            else newBgClasses = ['from-gray-700', 'to-gray-900'];
             appBody.classList.remove(...currentBgClasses);
             appBody.classList.add(...newBgClasses);
             currentBgClasses = newBgClasses;
         };
 
         const handleSearch = (city = null, coords = null) => {
-            console.log('handleSearch triggered for:', city || coords);
             if (!city && !coords) return;
             loader.style.display = 'block';
             resultsContainer.classList.add('hidden');
-            healthRecommendationsEl.classList.add('hidden');
-            forecastDataEl.classList.add('hidden');
             errorMessage.textContent = '';
             
-            let forecastData;
-
             let weatherUrl = '/weather?';
             let forecastUrl = '/forecast?';
             if (coords) {
                 weatherUrl += `lat=${coords.latitude}&lon=${coords.longitude}`;
                 forecastUrl += `lat=${coords.latitude}&lon=${coords.longitude}`;
-                currentCoords = { lat: coords.latitude, lon: coords.longitude };
             } else {
-                weatherUrl += `city=${city}`;
-                forecastUrl += `city=${city}`;
-                currentCoords = { lat: null, lon: null }; // Reset coords if searching by city
+                weatherUrl += `city=${encodeURIComponent(city)}`;
+                forecastUrl += `city=${encodeURIComponent(city)}`;
             }
 
             Promise.all([
@@ -164,33 +109,39 @@
             ])
             .then(([{ ok: weatherOk, data: weatherResponse }, { ok: forecastOk, data: forecastResponse }]) => {
                 if (!weatherOk) throw new Error(weatherResponse.error || 'Weather data not found.');
+                
                 currentWeatherData = weatherResponse;
                 currentCity = currentWeatherData.city;
                 displayWeatherData(currentWeatherData);
 
-                if (forecastOk) {
-                    forecastData = forecastResponse; 
-                    displayForecastData(forecastData); 
-                } else {
-                    console.error('Error fetching forecast:', forecastResponse.error);
-                    forecastDataEl.classList.add('hidden'); // Hide if error
-                }
+                if (forecastOk) displayForecastData(forecastResponse);
+                else console.error('Error fetching forecast:', forecastResponse.error);
 
-                // Now fetch air quality separately using lat/lon from weatherData
+                airQualityDataEl.innerHTML = `<h2 class="text-2xl font-semibold mb-4">Air Quality</h2><p>Loading...</p>`;
+                healthRecommendationsEl.classList.add('hidden');
+
                 return fetch(`/air_quality?lat=${currentWeatherData.lat}&lon=${currentWeatherData.lon}`);
             })
             .then(res => res.json().then(data => ({ ok: res.ok, data })))
             .then(({ ok, data }) => {
-                if (!ok) throw new Error(data.error || 'Air quality data not found.');
-                currentAirQualityData = data;
-                displayAirQualityData(currentAirQualityData); // This was missing
-                displayHealthRecommendations(currentWeatherData, currentAirQualityData);
-                resultsContainer.classList.remove('hidden');
+                if (!ok) {
+                    console.error('Air quality data error:', data.error);
+                    airQualityDataEl.innerHTML = `<h2 class="text-2xl font-semibold mb-4">Air Quality</h2><p class="text-yellow-300">Could not load air quality data: ${data.error || 'Not available for this location.'}</p>`;
+                    currentAirQualityData = null;
+                } else {
+                    currentAirQualityData = data;
+                    displayAirQualityData(currentAirQualityData);
+                }
+                
+                if(currentWeatherData && currentAirQualityData) {
+                    displayHealthRecommendations(currentWeatherData, currentAirQualityData);
+                }
+                
                 updateDynamicUI(currentWeatherData, currentAirQualityData);
+                resultsContainer.classList.remove('hidden');
             })
             .catch(err => {
                 errorMessage.textContent = `Error: ${err.message}`;
-                console.error("Search error:", err);
             })
             .finally(() => {
                 loader.style.display = 'none';
@@ -198,15 +149,11 @@
         };
         
         const displayWeatherData = (data) => {
-            console.log('Displaying weather data.');
-            const windArrowSvg = `<svg class="inline-block w-5 h-5 ml-1 transform transition-transform duration-300" style="transform: rotate(${data.wind_deg}deg);" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a.75.75 0 01-.75-.75V4.66L7.22 6.69a.75.75 0 11-1.06-1.06l3.25-3.25a.75.75 0 011.06 0l3.25 3.25a.75.75 0 01-1.06 1.06L10.75 4.66v12.59a.75.75 0 01-.75.75z" clip-rule="evenodd"></path></svg>`;
-
+            const windArrowSvg = `<svg class="inline-block w-5 h-5 ml-1" style="transform: rotate(${data.wind_deg}deg);" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a.75.75 0 01-.75-.75V4.66L7.22 6.69a.75.75 0 11-1.06-1.06l3.25-3.25a.75.75 0 011.06 0l3.25 3.25a.75.75 0 01-1.06 1.06L10.75 4.66v12.59a.75.75 0 01-.75-.75z" clip-rule="evenodd"></path></svg>`;
             weatherDataEl.innerHTML = `
                 <div class="flex justify-between items-center">
                     <h2 class="text-2xl font-semibold">Weather in ${data.city}</h2>
-                    <div class="flex space-x-2">
-                        <button id="addFavoriteBtn" class="bg-white/20 px-3 py-1 rounded-full text-sm hover:bg-white/40 transition">+ Fav</button>
-                    </div>
+                    <button id="addFavoriteBtn" class="bg-white/20 px-3 py-1 rounded-full text-sm hover:bg-white/40 transition">+ Fav</button>
                 </div>
                 <div class="flex items-center justify-between mt-4">
                     <div>
@@ -215,10 +162,10 @@
                     </div>
                     <img src="http://openweathermap.org/img/wn/${data.icon}@2x.png" alt="${data.description}" class="w-24 h-24">
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-2 gap-4 mt-6 text-center">
+                <div class="grid grid-cols-2 gap-4 mt-6 text-center">
                     <div class="bg-white/10 p-3 rounded-lg"><div>Feels Like</div><div class="font-bold text-lg">${data.feels_like}°C</div></div>
                     <div class="bg-white/10 p-3 rounded-lg"><div>Humidity</div><div class="font-bold text-lg">${data.humidity}%</div></div>
-                    <div class="bg-white/10 p-3 rounded-lg"><div>Wind</div><div class="font-bold text-lg">${data.wind_speed.toFixed(1)} km/h ${data.wind_direction} ${windArrowSvg}</div></div>
+                    <div class="bg-white/10 p-3 rounded-lg"><div>Wind</div><div class="font-bold text-lg">${(data.wind_speed || 0).toFixed(1)} km/h ${data.wind_direction} ${windArrowSvg}</div></div>
                     <div class="bg-white/10 p-3 rounded-lg"><div>Sunrise</div><div class="font-bold text-lg">${data.sunrise}</div></div>
                     <div class="bg-white/10 p-3 rounded-lg"><div>Sunset</div><div class="font-bold text-lg">${data.sunset}</div></div>
                     <div class="bg-white/10 p-3 rounded-lg"><div>Min/Max Temp</div><div class="font-bold text-lg">${data.temp_min}°C / ${data.temp_max}°C</div></div>
@@ -227,67 +174,53 @@
         };
         
         const displayAirQualityData = (data) => {
-            console.log('Displaying AQI data.');
             const { aqi, description, components } = data;
             const bgColor = aqiColorClasses[aqi] || 'bg-gray-500/70';
+            
+            let componentsHTML = '<div class="text-sm text-gray-300">Component data not available.</div>';
+            if (components) {
+                componentsHTML = Object.entries(components).map(([key, value]) => `
+                    <div class="bg-white/10 p-3 rounded-lg">
+                        <div class="uppercase">${key.replace('_', '.')}</div>
+                        <div class="font-bold">${(value || 0).toFixed(2)} <span class="font-light text-xs">μg/m³</span></div>
+                    </div>
+                `).join('');
+            }
+
             airQualityDataEl.innerHTML = `
                 <h2 class="text-2xl font-semibold mb-4">Air Quality</h2>
                 <div class="p-4 rounded-lg mb-4 flex justify-between items-center font-bold ${bgColor}">
                     <span>${description}</span><span>AQI: ${aqi}</span>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-                    ${Object.entries(components).map(([key, value]) => `
-                        <div class="bg-white/10 p-3 rounded-lg">
-                            <div class="uppercase">${key.replace('_', '.')}</div>
-                            <div class="font-bold">${value.toFixed(2)} <span class="font-light text-xs">μg/m³</span></div>
-                        </div>
-                    `).join('')}
+                    ${componentsHTML}
                 </div>`;
         };
 
         const displayHealthRecommendations = async (weatherData, airQualityData) => {
-            console.log('Displaying health recommendations and triggering AI analysis.');
             healthRecommendationsEl.classList.remove('hidden');
-            healthRecommendationsEl.innerHTML = `<h2 class="text-2xl font-semibold mb-4">คำแนะนำสุขภาพ & AI Analysis</h2><p>กำลังสร้างคำแนะนำจาก AI...</p>`;
-            
+            healthRecommendationsEl.innerHTML = `<h2 class="text-2xl font-semibold mb-4">AI Health Advisory</h2><p>Generating recommendations...</p>`;
             try {
                 const response = await fetch('/health_analysis', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        weather_data: weatherData,
-                        air_quality_data: airQualityData,
-                        wind_speed: weatherData.wind_speed // Pass wind_speed explicitly
-                    })
+                    body: JSON.stringify({ weather_data: weatherData, air_quality_data: airQualityData, wind_speed: weatherData.wind_speed })
                 });
                 const data = await response.json();
-
                 if (data.analysis) {
-                    healthRecommendationsEl.innerHTML = `
-                        <h2 class="text-2xl font-semibold mb-4">คำแนะนำสุขภาพ & AI Analysis</h2>
-                        <div class="prose prose-invert max-w-none">
-                            ${data.analysis.replace(/\n/g, '<br>')}
-                        </div>
-                    `;
+                    healthRecommendationsEl.innerHTML = `<h2 class="text-2xl font-semibold mb-4">AI Health Advisory</h2><div class="prose prose-invert max-w-none">${data.analysis.replace(/\n/g, '<br>')}</div>`;
                 } else if (data.error) {
-                    healthRecommendationsEl.innerHTML = `<h2 class="text-2xl font-semibold mb-4">คำแนะนำสุขภาพ & AI Analysis</h2><p class="text-red-300">Error: ${data.error}</p>`;
-                    console.error('AI Analysis Error:', data.error);
+                    healthRecommendationsEl.innerHTML += `<p class="text-red-300">Error: ${data.error}</p>`;
                 }
             } catch (err) {
-                healthRecommendationsEl.innerHTML = `<h2 class="text-2xl font-semibold mb-4">คำแนะนำสุขภาพ & AI Analysis</h2><p class="text-red-300">Failed to get AI analysis.</p>`;
-                console.error('Fetch AI Analysis Error:', err);
+                healthRecommendationsEl.innerHTML += `<p class="text-red-300">Failed to get AI analysis.</p>`;
             }
         };
 
         const displayForecastData = (forecasts) => {
-            console.log('Displaying forecast data.', forecasts);
-            if (!forecasts || forecasts.length === 0) {
-                forecastDataEl.classList.add('hidden');
-                return;
-            }
             forecastDataEl.classList.remove('hidden');
             forecastDataEl.innerHTML = `
-                <h2 class="text-2xl font-semibold mb-4">พยากรณ์ 5 วัน</h2>
+                <h2 class="text-2xl font-semibold mb-4">5-Day Forecast</h2>
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
                     ${forecasts.map(day => `
                         <div class="bg-white/10 p-3 rounded-lg flex flex-col items-center justify-center text-center">
@@ -297,28 +230,18 @@
                             <div class="font-bold text-lg">${day.temp_min}°C / ${day.temp_max}°C</div>
                         </div>
                     `).join('')}
-                </div>
-            `;
+                </div>`;
         };
         
-        // --- Favorites Logic ---
         const addCurrentCityToFavorites = () => {
-            console.log('Add to Favorites button clicked for:', currentCity);
             if (!currentCity) return;
             fetch('/favorites', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ city: currentCity })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && !document.querySelector(`.favorite-item[data-city="${currentCity}"]`)) {
-                    addFavoriteToList(currentCity);
-                    console.log('Added favorite:', currentCity);
-                } else if(data.error) {
-                    alert(data.error);
-                    console.error('Error adding favorite:', data.error);
-                }
+            }).then(res => res.json()).then(data => {
+                if (data.success && !document.querySelector(`.favorite-item[data-city="${currentCity}"]`)) addFavoriteToList(currentCity);
+                else if(data.error) alert(data.error);
             });
         };
         
@@ -326,74 +249,42 @@
             const li = document.createElement('li');
             li.className = 'favorite-item bg-white/20 px-4 py-2 rounded-full flex items-center gap-2 cursor-pointer hover:bg-white/40';
             li.dataset.city = city;
-            li.innerHTML = `
-                <span>${city}</span>
-                <button class="remove-favorite bg-black/20 w-5 h-5 rounded-full text-xs text-white flex items-center justify-center" data-city="${city}">&times;</button>
-            `;
+            li.innerHTML = `<span>${city}</span><button class="remove-favorite bg-black/20 w-5 h-5 rounded-full text-xs" data-city="${city}">&times;</button>`;
             favoritesList.appendChild(li);
-            console.log('Favorite added to list DOM:', city);
         };
 
         const removeFavorite = (city) => {
-            console.log('Remove favorite button clicked for:', city);
-             fetch('/favorites', {
+            fetch('/favorites', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ city: city })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    document.querySelector(`.favorite-item[data-city="${city}"]`)?.remove();
-                    console.log('Favorite removed from DOM:', city);
-                } else {
-                    alert('Could not remove favorite.');
-                    console.error('Error removing favorite:', data.error);
-                }
+            }).then(res => res.json()).then(data => {
+                if (data.success) document.querySelector(`.favorite-item[data-city="${city}"]`)?.remove();
+                else alert('Could not remove favorite.');
             });
         };
 
-        // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM Content Loaded.');
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     pos => handleSearch(null, pos.coords),
-                    () => { 
-                        console.warn('Geolocation denied or failed on load. User can search manually.');
-                        errorMessage.textContent = 'Could not get location. Search for a city.';
-                     }
+                    () => { errorMessage.textContent = 'Could not get location. Please search for a city.'; }
                 );
             }
-            // Attach event listener for favorites list using event delegation
             favoritesList.addEventListener('click', e => {
-                console.log('Favorites list clicked.', e.target);
                 const favItem = e.target.closest('.favorite-item');
-                if (!favItem) {
-                    console.log('Click not on favorite item.');
-                    return;
-                }
+                if (!favItem) return;
                 const city = favItem.dataset.city;
-                console.log('Clicked favorite item for city:', city);
-                if (e.target.classList.contains('remove-favorite')) {
-                    console.log('Remove button clicked.');
-                    removeFavorite(city);
-                } else {
-                    console.log('Favorite city clicked for search.');
-                    cityInput.value = city;
-                    handleSearch(city);
-                }
+                if (e.target.classList.contains('remove-favorite')) removeFavorite(city);
+                else { cityInput.value = city; handleSearch(city); }
             });
         });
+
         cityInput.addEventListener('keypress', e => e.key === 'Enter' && handleSearch(cityInput.value));
         searchBtn.addEventListener('click', () => handleSearch(cityInput.value));
         geolocationBtn.addEventListener('click', () => {
-            console.log('Use My Location button clicked.');
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => handleSearch(null, pos.coords));
-            }
+            if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleSearch(null, pos.coords));
         });
-
     </script>
 </body>
 </html>
