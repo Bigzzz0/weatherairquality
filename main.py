@@ -7,6 +7,8 @@ import sqlite3
 import datetime
 from collections import defaultdict
 import logging
+import json
+import google.generativeai as genai # Import the Gemini API client library
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -16,11 +18,18 @@ load_dotenv()
 app = Flask(__name__, template_folder='templates')
 
 API_KEY = os.getenv("API_KEY")
-GEMINI_API_KEY = "AIzaSyB5WOl4Z-hI1caON_KtyJPZuoDTQwIqAzE"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Configure the Gemini API client
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+else:
+    app.logger.error("GEMINI_API_KEY not found in environment variables. AI features will be disabled.")
 
 WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather"
 AIR_QUALITY_API_URL = "https://api.openweathermap.org/data/2.5/air_pollution"
 FORECAST_API_URL = "https://api.openweathermap.org/data/2.5/forecast"
+# GEMINI_API_URL is no longer needed when using the client library
 
 def init_db():
     conn = sqlite3.connect('database.db')
@@ -203,67 +212,6 @@ def get_forecast():
         app.logger.error(f"Invalid data received from forecast API: {e}")
         return jsonify({"error": "Invalid data received from forecast API"}), 500
 
-@app.route('/health_analysis', methods=['POST'])
-def health_analysis():
-    if not GEMINI_API_KEY:
-        return jsonify({"error": "Gemini API key not configured."}), 500
-
-    data = request.get_json()
-    weather_data = data.get('weather_data')
-    air_quality_data = data.get('air_quality_data')
-
-    if not all([weather_data, air_quality_data]):
-        return jsonify({"error": "Weather and air quality data are required."}), 400
-
-    prompt = f'''
-        As a weather and air quality expert in Thailand, analyze the following data for {weather_data.get('city', 'N/A')}:
-        - Weather: {weather_data.get('temperature', 'N/A')}°C (feels like {weather_data.get('feels_like', 'N/A')}°C), {weather_data.get('description', 'N/A')}, Humidity: {weather_data.get('humidity', 'N/A')}%, Wind: {weather_data.get('wind_speed', 0):.1f} km/h.
-        - Air Quality: AQI is {air_quality_data.get('aqi', 'N/A')} ({air_quality_data.get('description', 'N/A')}). Pollutants (μg/m³): PM2.5: {air_quality_data.get('components', {}).get('pm2_5', 'N/A')}, PM10: {air_quality_data.get('components', {}).get('pm10', 'N/A')}, O3: {air_quality_data.get('components', {}).get('o3', 'N/A')}.
-        Provide health and activity recommendations in Thai. Start with a 1-2 sentence summary, followed by a bulleted list of actionable advice.
-    '''
-    
-    gemini_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
-    payload = {
-        "contents": [{
-            "parts": [{
-                "text": prompt
-            }]
-        }]
-    }
-    headers = {'Content-Type': 'application/json'}
-
-    try:
-        response = requests.post(gemini_api_url, json=payload, headers=headers)
-        response.raise_for_status()
-        
-        app.logger.debug(f"Gemini API Response: {response.json()}")
-
-        candidates = response.json().get('candidates', [])
-        if not candidates:
-            raise ValueError("No candidates found in Gemini response")
-        
-        content_parts = candidates[0].get('content', {}).get('parts', [])
-        if not content_parts:
-            raise ValueError("No parts found in Gemini response content")
-
-        analysis_text = content_parts[0].get('text', '')
-        if not analysis_text:
-             raise ValueError("Empty text returned from Gemini")
-
-        return jsonify({"analysis": analysis_text})
-
-    except requests.exceptions.RequestException as e:
-        app.logger.error(f"Error calling Gemini REST API: {e}")
-        if e.response is not None:
-            app.logger.error(f"Gemini API Error Response: {e.response.text}")
-        return jsonify({"error": "Failed to get AI analysis"}), 500
-    except (ValueError, KeyError, IndexError) as e:
-        app.logger.error(f"Error parsing Gemini API response: {e}")
-        return jsonify({"error": "Failed to parse AI analysis"}), 500
-    except Exception as e:
-        app.logger.error(f"An unexpected error occurred in health_analysis: {e}")
-        return jsonify({"error": "An unexpected error occurred"}), 500
-
 @app.route('/favorites', methods=['GET', 'POST', 'DELETE'])
 def handle_favorites():
     conn = sqlite3.connect('database.db')
@@ -296,6 +244,80 @@ def handle_favorites():
 
     conn.close()
     return jsonify(message)
+
+@app.route('/health_analysis', methods=['POST'])
+def health_analysis():
+    data = request.get_json()
+    weather_data = data.get('weather_data')
+    air_quality_data = data.get('air_quality_data')
+
+    if not weather_data or not air_quality_data:
+        return jsonify({"error": "Weather or air quality data not provided"}), 400
+    
+    if not GEMINI_API_KEY:
+        return jsonify({"error": "Gemini API key not configured. Please set GEMINI_API_KEY in your .env file."}), 503
+
+    prompt = f"""
+    คุณคือผู้เชี่ยวชาญด้านสุขภาพและสภาพอากาศ 🌤️
+
+โปรดให้คำแนะนำด้านสุขภาพแบบส่วนบุคคล โดยอ้างอิงจากข้อมูลสภาพอากาศและคุณภาพอากาศด้านล่างนี้
+เน้นคำแนะนำที่นำไปใช้ได้จริงเกี่ยวกับการทำกิจกรรมกลางแจ้ง, การแต่งกาย, และความเสี่ยงต่อสุขภาพที่อาจเกิดขึ้น
+
+กรุณาตอบเป็นภาษาไทย ใช้ภาษาที่เป็นมิตร เข้าใจง่าย และจัดรูปแบบตามตัวอย่างนี้:
+
+---
+ตัวอย่างการตอบ:
+
+### 📝 สรุปสภาพอากาศวันนี้
+
+*   🌡️ **อุณหภูมิ:** 32°C (รู้สึกเหมือน 38°C)
+*   ☀️ **สภาพอากาศ:** ท้องฟ้าแจ่มใส
+*   💧 **ความชื้น:** 75%
+*   💨 **ลม:** 10 กม./ชม.
+
+### 🍃 คุณภาพอากาศ (AQI)
+
+*   🟧 **ดัชนี:** 3 (ปานกลาง)
+*   🔬 **มลพิษหลัก:** PM2.5
+
+### 💡 คำแนะนำเพื่อสุขภาพและการใช้ชีวิต
+
+*   **กิจกรรมกลางแจ้ง:** 🏃
+    *   อากาศค่อนข้างร้อนและชื้น อาจทำให้เหนื่อยง่าย ควรเลือกออกกำลังกายในช่วงเช้าหรือเย็น
+*   **การแต่งกาย:** 👕
+    *   สวมใส่เสื้อผ้าที่ระบายอากาศได้ดีและมีสีอ่อนเพื่อช่วยคลายร้อน
+*   **คำแนะนำสุขภาพ:** ❤️
+    *   คุณภาพอากาศระดับปานกลาง ผู้ที่อยู่ในกลุ่มเสี่ยง (เด็ก, ผู้สูงอายุ, ผู้มีโรคประจำตัว) ควรลดระยะเวลาทำกิจกรรมกลางแจ้ง
+    *   ดื่มน้ำให้เพียงพอเพื่อป้องกันภาวะขาดน้ำ
+
+---
+(สิ้นสุดตัวอย่าง)
+
+
+**ข้อมูลสำหรับสร้างคำแนะนำ:**
+
+### 🌡️ สภาพอากาศ
+- **อุณหภูมิ:** {weather_data.get('temperature')}°C
+- **สภาพอากาศ:** {weather_data.get('description')}
+- **ความชื้น:** {weather_data.get('humidity')}%
+- **ความเร็วลม:** {weather_data.get('wind_speed')} km/h
+
+### 🍃 คุณภาพอากาศ (AQI)
+- **ดัชนี (AQI):** {air_quality_data.get('aqi')} ({air_quality_data.get('description')})
+- **ส่วนประกอบมลพิษ:** {json.dumps(air_quality_data.get('components'), ensure_ascii=False)}
+
+### 💡 คำแนะนำเพื่อสุขภาพและการใช้ชีวิต:
+    """
+
+    try:
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        response = model.generate_content(prompt)
+        recommendations = response.text
+        return jsonify({"analysis": recommendations}) # Changed key from 'recommendations' to 'analysis'
+    except Exception as e:
+        app.logger.error(f"Error generating content with Gemini API: {e}")
+        return jsonify({"error": f"Failed to get AI analysis: {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     init_db()
