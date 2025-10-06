@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, jsonify
 import requests
 import os
@@ -9,6 +8,7 @@ from collections import defaultdict
 import logging
 import json
 import google.generativeai as genai # Import the Gemini API client library
+import sys
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -19,6 +19,9 @@ app = Flask(__name__, template_folder='templates')
 
 API_KEY = os.getenv("API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not API_KEY or API_KEY.strip() == "":
+    logging.error("OPENWEATHER API_KEY not found or empty in environment variables. Weather features will be disabled.")
 
 # Configure the Gemini API client
 if GEMINI_API_KEY:
@@ -74,15 +77,26 @@ def get_weather():
     else:
         return jsonify({"error": "City or coordinates must be provided"}), 400
 
+    if not API_KEY or API_KEY.strip() == "":
+        app.logger.error("OPENWEATHER API_KEY not configured.")
+        return jsonify({"error": "OpenWeather API key not configured. Please set API_KEY in your .env file."}), 503
+
     try:
         response = requests.get(WEATHER_API_URL, params=params)
+        app.logger.debug(f"WEATHER: API response status code: {response.status_code}")
+        app.logger.debug(f"WEATHER: API response text: {response.text}")
+        if response.status_code == 401:
+            app.logger.error("OpenWeather API Key is invalid or expired.")
+            return jsonify({"error": "OpenWeather API Key is invalid or expired. Please check your API_KEY."}), 401
         response.raise_for_status()
         data = response.json()
 
         tz_offset = datetime.timedelta(seconds=data['timezone'])
         tz = datetime.timezone(tz_offset)
-        sunrise = datetime.datetime.fromtimestamp(data["sys"]["sunrise"], tz=tz).strftime('%-I:%M %p')
-        sunset = datetime.datetime.fromtimestamp(data["sys"]["sunset"], tz=tz).strftime('%-I:%M %p')
+        # Platform-specific hour format
+        hour_fmt = '%-I:%M %p' if sys.platform != 'win32' else '%#I:%M %p'
+        sunrise = datetime.datetime.fromtimestamp(data["sys"]["sunrise"], tz=tz).strftime(hour_fmt)
+        sunset = datetime.datetime.fromtimestamp(data["sys"]["sunset"], tz=tz).strftime(hour_fmt)
 
         weather_data = {
             "city": data["name"],
@@ -106,8 +120,8 @@ def get_weather():
         app.logger.error(f"Error fetching weather data: {e}")
         return jsonify({"error": "Error fetching weather data"}), 500
     except KeyError as e:
-        app.logger.error(f"Invalid data received from weather API: {e}")
-        return jsonify({"error": "Invalid data received from weather API"}), 500
+        app.logger.error(f"Invalid data received from weather API: {e} | Response: {response.text}")
+        return jsonify({"error": f"Invalid data received from weather API: missing key {e}"}), 500
 
 @app.route('/air_quality')
 def get_air_quality():
@@ -120,10 +134,17 @@ def get_air_quality():
     params = {'lat': lat, 'lon': lon, 'appid': API_KEY}
     app.logger.debug(f"AIR_QUALITY: Requesting API with params: {params}")
     
+    if not API_KEY or API_KEY.strip() == "":
+        app.logger.error("OPENWEATHER API_KEY not configured.")
+        return jsonify({"error": "OpenWeather API key not configured. Please set API_KEY in your .env file."}), 503
+
     try:
         response = requests.get(AIR_QUALITY_API_URL, params=params)
         app.logger.debug(f"AIR_QUALITY: API response status code: {response.status_code}")
         app.logger.debug(f"AIR_QUALITY: API response text: {response.text}")
+        if response.status_code == 401:
+            app.logger.error("OpenWeather API Key is invalid or expired.")
+            return jsonify({"error": "OpenWeather API Key is invalid or expired. Please check your API_KEY."}), 401
         response.raise_for_status()
         data = response.json()
 
@@ -161,8 +182,17 @@ def get_forecast():
             return jsonify({"error": "City or coordinates must be provided"}), 400
         params['q'] = city
 
+    if not API_KEY or API_KEY.strip() == "":
+        app.logger.error("OPENWEATHER API_KEY not configured.")
+        return jsonify({"error": "OpenWeather API key not configured. Please set API_KEY in your .env file."}), 503
+
     try:
         response = requests.get(FORECAST_API_URL, params=params)
+        app.logger.debug(f"FORECAST: API response status code: {response.status_code}")
+        app.logger.debug(f"FORECAST: API response text: {response.text}")
+        if response.status_code == 401:
+            app.logger.error("OpenWeather API Key is invalid or expired.")
+            return jsonify({"error": "OpenWeather API Key is invalid or expired. Please check your API_KEY."}), 401
         response.raise_for_status()
         data = response.json()
 
