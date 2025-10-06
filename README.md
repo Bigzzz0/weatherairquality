@@ -1,63 +1,3 @@
-
-Write README.md for project
-6 ต.ค.
-·
-Bigzzz0/weatherairquality
-·
-main
-·
-+87
--4
-
-เก็บถาวร
-
-แบ่งปัน
-
-สร้าง PR
-
-
-ช่วยเขียน readme.md ของโปรเจคนี้ให้หน่อย
-คัดลอก
-Summary
-
-Replaced the starter README with comprehensive documentation covering application features, data sources, and an overview of the dashboard experience. 
-
-Added detailed setup instructions, including environment configuration, dependency installation, and database initialization guidance. 
-
-Documented troubleshooting tips, project structure, and licensing notes for contributors and deployers. 
-
-Testing
-
-⚠️ Not run (not requested).
-
-
-ไฟล์ (1)
-เขียนเป็นภาษาไทย
-คัดลอก
-Summary
-
-แปลและเขียน README ทั้งหมดเป็นภาษาไทย โดยยังคงรายละเอียดคุณลักษณะ การตั้งค่า การใช้งาน และการแก้ไขปัญหาไว้ครบถ้วน.
-
-Testing
-
-⚠️ ไม่ได้รันการทดสอบ (การเปลี่ยนแปลงเฉพาะเอกสาร)
-
-
-ไฟล์ (1)
-
-README.md
-+87
--4
-
-
-
-การเปรียบเทียบ
-บันทึก
-
-README.md
-+87
--4
-
 # แดชบอร์ดสภาพอากาศและคุณภาพอากาศ (Weather & Air Quality Dashboard)
 
 เว็บแอปพลิเคชัน Flask ที่รวมข้อมูลสภาพอากาศแบบเรียลไทม์ ดัชนีคุณภาพอากาศ พยากรณ์ล่วงหน้า และคำแนะนำด้านสุขภาพที่สร้างโดยปัญญาประดิษฐ์ไว้ในแดชบอร์ดเดียว ผู้ใช้สามารถค้นหาเมืองที่ต้องการ ใช้ตำแหน่งปัจจุบัน บันทึกเมืองโปรด และรับคำแนะนำด้านสุขภาพภาษาไทยที่สอดคล้องกับสถานการณ์ล่าสุดได้ทันที
@@ -144,8 +84,3 @@ weatherairquality/
 ├── database.db         # ฐานข้อมูล SQLite (สร้างเมื่อรันแอป)
 └── README.md           # เอกสารประกอบโปรเจกต์ (ไฟล์นี้)
 ```
-
-## ใบอนุญาต
-
-โปรเจกต์นี้เผยแพร่แบบ as-is โดยยังไม่ระบุไลเซนส์ หากต้องการแจกจ่ายหรือใช้งานในระบบจริง กรุณาเพิ่มไลเซนส์ที่เหมาะสมก่อน
-
