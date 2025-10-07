@@ -9,8 +9,9 @@
 [![OpenWeather](https://img.shields.io/badge/OpenWeather-EB6E4B?style=for-the-badge&logo=OpenWeatherMap&logoColor=white)](https://openweathermap.org/api)
 [![Gemini API](https://img.shields.io/badge/Gemini_API-34A853?style=for-the-badge&logo=google-gemini&logoColor=white)](https://ai.google.dev/)
 
-[🔗 **คลิกเพื่อดูสไลด์นำเสนอ (Canva)** 🔗](https://www.canva.com/design/DAG1HiTYYfY/m_5jj2O4Dt3d14G7PwpxnA/view?utm_content=DAG1HiTYYfY&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hbca9533057)
-
+[🚀 **Live Demo** 🚀](https://weatherairquality.onrender.com/)
+&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
+[🔗 **สไลด์นำเสนอ (Canva)** 🔗](https://www.canva.com/design/DAG1HiTYYfY/m_5jj2O4Dt3d14G7PwpxnA/view?utm_content=DAG1HiTYYfY&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hbca9533057)
 </div>
 
 ## ✨ ทีมพัฒนา (Development Team)
@@ -26,7 +27,7 @@
 ## 🎬 ตัวอย่างการใช้งาน (Demo)
 
 ![Demo GIF](https://github.com/user-attachments/assets/deed04f2-5197-4228-adcb-eecad421ad70)
-
+[🚀 **Live Demo** 🚀](https://weatherairquality.onrender.com/)
 ## 🌟 คุณลักษณะเด่น (Features)
 
 -   **ภาพรวมสภาพอากาศปัจจุบัน** – แสดงอุณหภูมิ ความชื้น ความเร็ว/ทิศทางลม เวลา Sunrise & Sunset และสัญลักษณ์สภาพอากาศจาก OpenWeather API
