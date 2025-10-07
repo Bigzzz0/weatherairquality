@@ -135,15 +135,15 @@ python main.py
 
 ## 📁 โครงสร้างโปรเจกต์ (Project Structure)
 
-```
+
 weatherairquality/
 ├── 📂 static/
-│   └── (ไฟล์ CSS, JS, รูปภาพ ถ้ามี)
+│   └── (ไฟล์ CSS, JS, รูปภาพ)
 ├── 📂 templates/
 │   └── 📄 index.html      # UI แดชบอร์ดที่ใช้ Tailwind และสคริปต์ฝั่งไคลเอนต์
 ├── 📄 main.py             # เส้นทาง Flask และตรรกะเชื่อมต่อบริการต่าง ๆ
 ├── 📄 requirements.txt    # รายการไลบรารีของ Python
 ├── 📄 database.db         # ฐานข้อมูล SQLite (สร้างเมื่อรันแอป)
 ├── 📄 .env                # ไฟล์เก็บ API keys (ไม่ควรอยู่ใน Git)
-└── 📄 README.md           # เอกสารประกอบโปรเจกต์ (ไฟล์นี้)
-```
+├── 📄 README.md           # เอกสารประกอบโปรเจกต์ (ไฟล์นี้)
+└── 📄 test_main.py        # ไฟล์สำหรับทดสอบโปรแกรม (Automated Tests)
