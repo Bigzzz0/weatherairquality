@@ -26,7 +26,7 @@
 
 ## 🎬 ตัวอย่างการใช้งาน (Demo)
 
-![Demo GIF](https://github.com/user-attachments/assets/deed04f2-5197-4228-adcb-eecad421ad70)
+![Demo GIF](https://github.com/Bigzzz0/weatherairquality/blob/main/static/Gif%20demo.gif)
 [🚀 **Live Demo** 🚀](https://weatherairquality.onrender.com/)
 ## 🌟 คุณลักษณะเด่น (Features)
 
