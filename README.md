@@ -139,7 +139,7 @@ python main.py
 
 weatherairquality/
 ├── 📂 static/
-│   └── (ไฟล์ CSS, JS, รูปภาพ)
+│   └── (ไฟล์ รูปภาพ)
 ├── 📂 templates/
 │   └── 📄 index.html      # UI แดชบอร์ดที่ใช้ Tailwind และสคริปต์ฝั่งไคลเอนต์
 ├── 📄 main.py             # เส้นทาง Flask และตรรกะเชื่อมต่อบริการต่าง ๆ
