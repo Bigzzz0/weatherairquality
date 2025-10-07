@@ -135,6 +135,7 @@ python main.py
 
 ## 📁 โครงสร้างโปรเจกต์ (Project Structure)
 
+```
 
 weatherairquality/
 ├── 📂 static/
@@ -147,3 +148,4 @@ weatherairquality/
 ├── 📄 .env                # ไฟล์เก็บ API keys (ไม่ควรอยู่ใน Git)
 ├── 📄 README.md           # เอกสารประกอบโปรเจกต์ (ไฟล์นี้)
 └── 📄 test_main.py        # ไฟล์สำหรับทดสอบโปรแกรม (Automated Tests)
+```
