@@ -26,6 +26,8 @@
 
 ## 🎬 ตัวอย่างการใช้งาน (Demo)
 
+🎥 **[คลิกเพื่อชมวิดีโอ Walkthrough การใช้งาน (Google Drive)](https://drive.google.com/file/d/1brdQVO9sTr4nuFuRvTa7jZ97hU6YEz_L/view?usp=sharing)**
+
 ![Demo GIF](https://github.com/Bigzzz0/weatherairquality/blob/main/static/Gif%20demo.gif)
 [🚀 **Live Demo** 🚀](https://weatherairquality.onrender.com/)
 ## 🌟 คุณลักษณะเด่น (Features)
